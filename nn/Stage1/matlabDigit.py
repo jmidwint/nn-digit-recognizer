@@ -25,7 +25,7 @@ from pred import predict
 # NN Architecture Parms 
 hidden_layer_size = 25
 num_labels = 10 
-
+MAXITER = 400 # Iterations for learning
 
 # ===================================================
 #
@@ -162,7 +162,7 @@ def main():
 
  
 #%% ================ Part 6: Initializing Parameters ================
-#%  In this part of the exercise, you will be starting to implment a two
+#%  In this part of the exercise, you will be starting to implement a two
 #%  layer neural network that classifies digits. You will start by
 #%  implementing a function to initialize the weights of the neural network
 #%  (randInitializeWeights.m)
@@ -238,7 +238,7 @@ def main():
     #%  After you have completed the assignment, change the MaxIter to a larger
     #%  value to see how more training helps.
     #% jkm change maxIter from 50-> 400
-    options = {'maxiter': 400}
+    options = {'maxiter': MAXITER}
 
     #%  You should also try different values of lambda
     MLlambda = 1

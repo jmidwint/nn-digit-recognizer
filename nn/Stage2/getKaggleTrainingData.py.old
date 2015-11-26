@@ -1,9 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from Stage1.displayData import displayData
-
-def getKaggleTrainingData(scale = 1.0, stats = True):
+def getKaggleTrainingData():
     ''' Get the data based on the Kaggle format 
         Returns:
            m: Number of rows
@@ -19,9 +17,8 @@ def getKaggleTrainingData(scale = 1.0, stats = True):
     train = pd.read_csv(fnTrain)
 
     # Print the stats of the dataframe.
-    if stats:
-        print(" Some raw stats on the data here: \n")
-        print(train.describe())
+    print(" Some raw stats on the data here: \n")
+    print(train.describe())
 
     M = train.as_matrix() # gives numpy array
 
@@ -30,7 +27,7 @@ def getKaggleTrainingData(scale = 1.0, stats = True):
 
     # Scale the input grey scale pixels to be between -1  and 1 float
     X = X.astype('float')
-    X = (X - ( X.max() /float(scale)))/X.max()
+    X = (X - X.max())/X.max()
  
     # Find number of rows examples "m", & columns features "n" 
     m, n = X.shape 
@@ -40,7 +37,7 @@ def getKaggleTrainingData(scale = 1.0, stats = True):
 
 def displaySampleData(X, y):
     ''' Display random images as a grid, along with the corresponding labels'''
-    m, n = X.shape
+
     # Select some random images from X
     print('Selecting random examples of the data to display.\n')
     sel = np.random.permutation(m)
@@ -76,8 +73,16 @@ def partitionData(X, y):
     return X[idx_train, :], y[idx_train], X[idx_cv, :],  y[idx_cv], X[idx_test, :], y[idx_test] 
 
 
-def countData(X):
-    ''' manually counts the disribution of the data ''' 
+def countData(label):
+    ''' manually counts the disribution of the data '''
+    sumsData = []
     for i in np.arange(10):
-        print('{0}: {1}'.format(i, (sum(X == i))))
-    
+        print( sum(label == i))
+        
+
+''' 
+X_train, y_train, X_cv, y_cv, X_test, y_test
+   
+for i in np.arange(10):
+...     print( sum(y == i))
+'''

@@ -49,8 +49,10 @@ def writeKaggleTestResults(fn, pred):
     #Create the csv file name
     fnResults = resultsDir + 'ResultsFor_' + fn + fnExt 
 
-    # Create the dataframe to write
-    df = pd.DataFrame(np.vstack(pred)) # 2D array e.g. column stacked 
+    # Create the dataframe to write, plus need the data to be integer
+    df = pd.DataFrame(np.vstack(pred.astype('int'))) # 2D array e.g. column stacked 
+    if (df.index[0] == 0):
+        df.index += 1 # Indexing in pandas start at 0 so shift up by 1
     df.to_csv(path_or_buf=fnResults, header=['Label'], index=True, index_label='ImageId')
 
     print('\n Results written to File:\n  {0}\n'.format(fnResults))
@@ -58,7 +60,7 @@ def writeKaggleTestResults(fn, pred):
     return
 
 
-def getKaggleTestData():
+def getKaggleTestData(scale = 1.0):
     ''' Get the test data based on the Kaggle format 
         Returns:
            m: Number of rows
@@ -78,9 +80,10 @@ def getKaggleTestData():
     M = test.as_matrix() # gives numpy array
     X = M[:,0:]    # The test data
 
-    # Scale the input grey scale pixels by 255 to between 0 and 1 float
+    # Scale the input grey scale pixels by 255 to between -1 to 1 if scale by 1
+    #   
     X = X.astype('float')
-    X = X/X.max()
+    X = (X - ( X.max() /float(scale)))/X.max()
  
     # Find number of rows examples "m", & columns features "n" 
     m, n = X.shape 

@@ -1,0 +1,193 @@
+import code
+import numpy as np 
+import scipy.optimize as sci
+
+# Local Imports
+from Stage1.nnCostFunction import nnCostFunction
+from Stage1.displayData import displayData
+from Stage1.randInitializeWeights import randInitializeWeights
+
+#from Stage2.learnedTheta import writeLearnedTheta 
+
+# Callback for displaying the cost at the end of each iteration 
+class Callback(object): 
+    def __init__(self, input_layer_size, hidden_layer_size, num_labels,
+                        X_cv, y_cv, _lambda, costFunc): 
+        self.it = 0
+        self.input_layer_size = input_layer_size
+        self.hidden_layer_size = hidden_layer_size
+        self.num_labels = num_labels
+        self.X_cv = X_cv
+        self.y_cv = y_cv
+        self._lambda = _lambda
+        self.costFunc = costFunc
+
+    def __call__(self, p ): 
+        self.it += 1
+        J_train = self.costFunc(p)[0]
+        
+        # Calculate the cv cost every 10 iterations
+        if (self.it % 10 == 0):
+            J_cv, _ = nnCostFunction(p, self.input_layer_size, self.hidden_layer_size,
+                               self.num_labels, self.X_cv, self.y_cv, self._lambda)
+ 
+            diff = np.abs(J_train - J_cv) 
+
+            print "Iter %5d | J_train: %e  | J_cv: %e  | Diff: %e" % (self.it, J_train, J_cv, diff) 
+        else:
+            print "Iter %5d | J_train: %e" % (self.it, J_train)
+
+def initializeNN(input_layer_size, hidden_layer_size, num_labels):
+    ''' Randomly initialize the weights to start the training.
+        The weights are returned unrolled in one list.
+    '''
+
+    print('\nInitializing Neural Network Parameters ...\n')
+
+    initial_Theta1 = randInitializeWeights(input_layer_size, hidden_layer_size)
+    initial_Theta2 = randInitializeWeights(hidden_layer_size, num_labels)
+
+    #% Unroll parameters
+    initial_nn_params = np.hstack(( initial_Theta1.ravel(order = 'F'),
+                                    initial_Theta2.ravel(order = 'F')))
+
+    return initial_nn_params
+
+
+def trainNN(input_layer_size, hidden_layer_size, num_labels, _lambda, 
+             X_train, y_train, X_cv, y_cv):
+    ''' trainNN - comments '''
+   
+    MAXITER = 1000 
+
+    # Step 1: Initializing  Parameters
+    initial_nn_params = initializeNN(input_layer_size, hidden_layer_size, num_labels)
+    
+    options = {'maxiter': MAXITER} # jkm - need to think about finding this best value
+
+    # Step 2: Training NN 
+    print ('\nTraining Neural Network... \n')
+    print('\n  Parms: Hidden Layer Units: {0}  Max Iters: {1}  Lambda: {2}  \n'.format( 
+                hidden_layer_size, MAXITER, _lambda))
+   
+    #% Create "short hand" for the cost function to be minimized
+    #% Now, costFunction is a function that takes in only one argument (the
+    #% neural network parameters)
+
+    costFunc = lambda p: nnCostFunction(p, input_layer_size, hidden_layer_size,
+                               num_labels, X_train, y_train, _lambda)
+
+    '''
+    NOTES: Call scipy optimize minimize function
+        method : str or callable, optional Type of solver. 
+           CG -> Minimization of scalar function of one or more variables 
+                 using the conjugate gradient algorithm.
+
+        jac : bool or callable, optional Jacobian (gradient) of objective function. 
+              Only for CG, BFGS, Newton-CG, L-BFGS-B, TNC, SLSQP, dogleg, trust-ncg. 
+              If jac is a Boolean and is True, fun is assumed to return the gradient 
+              along with the objective function. If False, the gradient will be 
+              estimated numerically. jac can also be a callable returning the 
+              gradient of the objective. In this case, it must accept the same 
+              arguments as fun.
+        callback : callable, optional. Called after each iteration, as callback(xk), 
+              where xk is the current parameter vector.
+'''
+
+   
+    result = sci.minimize(costFunc, initial_nn_params, method='CG', 
+               jac=True, options=options, 
+               callback=Callback(input_layer_size, hidden_layer_size, 
+                                 num_labels, X_cv, y_cv, _lambda, costFunc)) 
+    nn_params = result.x 
+    cost = result.fun 
+
+    # Debug statement
+    print('\n Results from minimizer function Success: {0} \n   {1} '.format(
+              result.success, result.message))
+    
+
+    #% Obtain Theta1 and Theta2 back from nn_params
+    Theta1 = np.reshape(nn_params[:hidden_layer_size * (input_layer_size + 1)],
+               (hidden_layer_size, (input_layer_size + 1)), 
+                order = 'F')
+
+    Theta2 = np.reshape(nn_params[hidden_layer_size * (input_layer_size + 1):], 
+               (num_labels, (hidden_layer_size + 1)), 
+               order = 'F')  
+
+
+    # Pause
+    print("Program paused. Press Ctrl-D to continue.\n")
+    code.interact(local=dict(globals(), **locals()))
+    print(" ... continuing\n ")
+
+    # jkmm - hard coding maxiters here
+    visualizeNN(Theta1, hidden_layer_size, MAXITER, _lambda)
+
+
+    return Theta1, Theta2
+
+    ''' Comment out for now - now sure how I will use the cv results yet her
+    # JKM - do this with the cv data
+    #%% ================= Part 5: Implement Predict =================
+    #%  After training the neural network, we would like to use it to predict
+    #%  the labels. You will now implement the "predict" function to use the
+    #%  neural network to predict the labels of the training set. This lets
+    #%  you compute the training set accuracy.
+
+    pred = predict(Theta1, Theta2, X_cv)
+
+    # print out what the images are predicted to be
+    print('Selecting random examples of the data to display and how they are predicted.\n')
+    print(pred[sel].reshape(10, 10))
+
+    # display the sample images
+    displayData(images)
+
+    # JKM - my array was column stacked - don't understand why this works
+    pp = np.row_stack(pred)
+    accuracy = np.mean(np.double(pp == y_cv)) * 100
+
+    print('\n Training Set Accuracy: {0} \n'.format(accuracy))
+    print('\n  Parms: Hidden Layer Units: {0}  Max Iters: {1}  Lambda: {2}  \n'.format( 
+                hidden_layer_size, MAXITER, _lambda))
+    
+
+    # Create a filname to use to write the results
+    fn = 'HU_{0}_MaxIter_{1}_Lambda_{2}_PredAcc_{3}'.format(
+           hidden_layer_size, MAXITER, _lambda, accuracy)
+
+    # Capture the Thetas
+    writeLearnedTheta(Theta1, 'Theta1_' + fn)
+    writeLearnedTheta(Theta2, 'Theta2_' + fn)
+ 
+
+    # Pause
+    print("Program paused. Press Ctrl-D to continue.\n")
+    code.interact(local=dict(globals(), **locals()))
+    print(" ... continuing\n ")
+
+    '''
+
+
+def visualizeNN(Theta, hidden_layer_size, iters, _lambda):
+    ''' Visualize NN Weights that have been learned.
+
+        You can now "visualize" what the neural network is learning by 
+        displaying the hidden units to see what features they are capturing in 
+        the data.
+    '''
+
+    print('\nVisualizing Trained Neural Network... \n')
+    print('\n  Parms: Hidden Layer Units: {0}  Max Iters: {1}  Lambda: {2}  \n'.format( 
+                hidden_layer_size, iters, _lambda))
+
+    displayData(Theta[:, 1:])
+
+    # Pause
+    print("Program paused. Press Ctrl-D to continue.\n")
+    code.interact(local=dict(globals(), **locals()))
+    print(" ... continuing\n ")
+
+    return

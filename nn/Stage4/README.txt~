@@ -1,0 +1,40 @@
+The code here is exploring the hyper-parm space of convolutional
+networks.
+
+
+conv1.py:
+  - This is a straight copy of the original convolutional.py code from 
+     Tensorflow.
+
+
+conv2.py:
+  - Based on original TensorFlow convolutional.py code, but modified to
+    work with Kaggle data, and with my previous code for looking at 
+    datasets images, and to capture test results for Kaggle submission.
+  - Gets a .98986 accuracy on Kaggle.   
+
+
+conv3.py:
+  - Based on original TensorFlow convolutional.py code, but modified to
+  expand the MNIST dataset. (cloned from conv1.py in this directory).
+  - Expansion is done on the MNIST 60,000 training examples, by moving 
+  the pixels in each image up/down/left/right by one pixels, to create 
+  a new training set of 300,000 examples. 
+  - the # of epochs was reduced to 5 (from 10) with result: 0.4 test error 
+     on one run (takes about 5 hours on my machine)
+  - the # epochs returned to orginal 10 with result: 0.5 test error 
+     on one run 
+
+
+conv4.py:
+  - cloned from conv1.py to work with Kaggle training data,and test with MNIST TEST data,
+     & prediction done on Kaggle Test Data
+     Results on 10 Epochs : Test error 0.4 , on 1/1 run (about 1 hour)
+  - modified to expand the training set data, as per conv3.py, where 
+     the pixels in each image up/down/left/right by one pixels, to create 
+     a new training set of 210,000 examples.
+     Results on 10 Epochs : Test error 0.2 (.18), on 1/1 run (took 6 hours)
+     Kaggle Test Result: 0.99300 
+    
+   
+  
